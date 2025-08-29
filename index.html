@@ -291,6 +291,41 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Data from image_4e8ce4.png (in Baht)
+            const actualBudgetOriginal = [ // Renamed for clarity to avoid confusion with actualData for chart
+                1000000.00,
+                55700000.00,
+                65604307.00,
+                4848450.00,
+                930000.00,
+                2896193.00,
+                450000.00,
+                1800000.00,
+                645000.00
+            ];
+            const totalPaidData = [
+                1000000.00,
+                55700000.00,
+                49496620.20,
+                2210630.00,
+                0.00,
+                0.00,
+                0.00,
+                900000.00,
+                0.00
+            ];
+            const remainUnpaidData = [
+                0.00, // 01 Strategy
+                0.00, // 02 Media Production
+                16107686.80, // 03 Media Buy
+                2637820.00, // 03 Media Buy: Radio
+                930000.00, // 04 Public Relations
+                2896193.00, // 05 Event / Activity &
+                450000.00, // 06 Webpage
+                900000.00, // 07 Brand Survey
+                645000.00  // 08 VDO Summary and others
+            ];
+
             const chartData = {
                 labels: [
                     '01 Strategy',
@@ -306,29 +341,17 @@
                 datasets: [
                     {
                         label: 'Total Paid (Baht)',
-                        // Updated data based on the latest image: image_e9e935.png
-                        data: [1000000.00, 55700000.00, 49496620.20, 2210630.00, 0.00, 0.00, 0.00, 900000.00, 0.00],
-                        backgroundColor: '#4CAF50', // A vibrant green
-                        borderRadius: 8, // More rounded bars
-                        stack: 'BudgetStack',
+                        data: totalPaidData,
+                        backgroundColor: '#4CAF50', // Green for Total Paid
+                        borderRadius: 8,
+                        stack: 'ActualSpending', // Stack identifier
                     },
                     {
                         label: 'Remain Unpaid (Baht)',
-                        // Updated remaining budget calculation based on new 'Total Paid' for '03 Media Buy: Radio'
-                        data: [
-                            1000000.00 - 1000000.00,
-                            55700000.00 - 55700000.00,
-                            67400000.00 - 49496620.20,
-                            4000000.00 - 2210630.00, // Corrected '03 Media Buy: Radio' calculation
-                            5000000.00 - 0.00,
-                            3000000.00 - 0.00,
-                            1500000.00 - 0.00,
-                            1800000.00 - 900000.00,
-                            600000.00 - 0.00
-                        ],
-                        backgroundColor: '#90CAF9', // A soft blue
+                        data: remainUnpaidData,
+                        backgroundColor: '#90CAF9', // Soft blue for Remain Unpaid
                         borderRadius: 8,
-                        stack: 'BudgetStack',
+                        stack: 'ActualSpending', // Stack identifier
                     }
                 ]
             };
@@ -337,7 +360,7 @@
             const chartTooltip = document.getElementById('chartTooltip');
 
             const budgetPaymentChart = new Chart(ctx, {
-                type: 'bar',
+                type: 'bar', // Bar type for stacked bars
                 data: chartData,
                 options: {
                     responsive: true,
@@ -362,45 +385,61 @@
                         tooltip: {
                             enabled: false,
                             external: function(context) {
-                                let tooltipModel = context.tooltip;
+                                const tooltipModel = context.tooltip;
+                                const chartTooltip = document.getElementById('chartTooltip');
 
-                                if (tooltipModel.opacity === 0) {
+                                // ซ่อน tooltip ถ้าไม่มีข้อมูล
+                                if (!tooltipModel || !tooltipModel.dataPoints || tooltipModel.opacity === 0) {
                                     chartTooltip.classList.remove('show');
                                     return;
                                 }
 
-                                chartTooltip.classList.remove('above', 'below', 'no-transform');
+                                const dataIndex = tooltipModel.dataPoints[0].dataIndex; // ใช้ dataIndex จาก tooltipModel
+
+                                // ตรวจสอบ index ว่าถูกต้องหรือไม่
+                                if (
+                                    typeof dataIndex !== 'number' ||
+                                    isNaN(dataIndex) ||
+                                    dataIndex < 0 ||
+                                    dataIndex >= actualBudgetOriginal.length // ตรวจสอบกับความยาวของข้อมูลที่ยาวที่สุด
+                                ) {
+                                    chartTooltip.classList.remove('show');
+                                    return;
+                                }
+
+                                // ฟังก์ชันจัดรูปแบบตัวเลข
+                                const formatValue = (value) => {
+                                    const num = Number(value);
+                                    return isNaN(num) ? '-' : num.toLocaleString('en-US', {
+                                        minimumFractionDigits: 0,
+                                        maximumFractionDigits: 2
+                                    });
+                                };
+
+                                // ดึงค่าที่ต้องแสดง
+                                const actualBudgetVal = formatValue(actualBudgetOriginal[dataIndex]);
+                                const totalPaidVal = formatValue(totalPaidData[dataIndex]);
+                                const remainUnpaidVal = formatValue(remainUnpaidData[dataIndex]);
+
+                                // สร้าง HTML สำหรับ tooltip
+                                chartTooltip.innerHTML = `
+                                    <div class="font-bold mb-1 text-gray-100">${tooltipModel.title[0]}</div>
+                                    <div>Actual Budget: <span class="text-blue-300">${actualBudgetVal}</span> Baht</div>
+                                    <div>Total Paid: <span class="text-green-300">${totalPaidVal}</span> Baht</div>
+                                    <div>Remain Unpaid: <span class="text-yellow-300">${remainUnpaidVal}</span> Baht</div>
+                                `;
+
+                                // คำนวณตำแหน่ง tooltip
+                                const canvasRect = context.chart.canvas.getBoundingClientRect();
+                                chartTooltip.classList.remove('above', 'below', 'no-transform'); // Reset alignment
                                 if (tooltipModel.yAlign) {
                                     chartTooltip.classList.add(tooltipModel.yAlign);
                                 } else {
                                     chartTooltip.classList.add('no-transform');
                                 }
-
-                                if (tooltipModel.body) {
-                                    let title = tooltipModel.title[0];
-                                    let totalBudget = 0;
-                                    // Sum up all parts of the stack for the given data point to get the total budget
-                                    // It's important to use the original total budget as per the table, not just the sum of paid and remaining from datasets
-                                    // Re-calculate total budget from the initial table values for accuracy in tooltip
-                                    const originalTotalBudgets = [1000000.00, 55700000.00, 67400000.00, 4000000.00, 5000000.00, 3000000.00, 1500000.00, 1800000.00, 600000.00];
-                                    totalBudget = originalTotalBudgets[tooltipModel.dataPoints[0].dataIndex];
-
-                                    let totalPaid = chartData.datasets[0].data[tooltipModel.dataPoints[0].dataIndex];
-                                    let remainUnpaid = chartData.datasets[1].data[tooltipModel.dataPoints[0].dataIndex];
-
-                                    let innerHtml = `
-                                        <div class="font-bold mb-1 text-gray-100">${title}</div>
-                                        <div>Total Budget: <span class="text-green-300">${totalBudget.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span> Baht</div>
-                                        <div>Total Paid: <span class="text-blue-300">${totalPaid.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span> Baht</div>
-                                        <div>Remain Unpaid: <span class="text-yellow-300">${remainUnpaid.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span> Baht</div>
-                                    `;
-                                    chartTooltip.innerHTML = innerHtml;
-                                }
-
-                                const position = context.chart.canvas.getBoundingClientRect();
                                 chartTooltip.classList.add('show');
-                                chartTooltip.style.left = position.left + window.pageXOffset + tooltipModel.caretX + 'px';
-                                chartTooltip.style.top = position.top + window.pageYOffset + tooltipModel.caretY - chartTooltip.clientHeight - 10 + 'px';
+                                chartTooltip.style.left = canvasRect.left + window.pageXOffset + tooltipModel.caretX + 'px';
+                                chartTooltip.style.top = canvasRect.top + window.pageYOffset + tooltipModel.caretY + 10 + 'px'; // ปรับตำแหน่งให้แสดงด้านล่าง caretY
                             }
                         }
                     },
@@ -450,7 +489,7 @@
                                     return value.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
                                 }
                             },
-                            stacked: true
+                            stacked: true // This makes the bars stack
                         }
                     }
                 }
