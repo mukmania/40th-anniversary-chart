@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>40th Anniversary Campaign: Budget & Payment</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #eef2f6; /* Lighter background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .chart-container {
+            background-color: #ffffff;
+            border-radius: 16px; /* More rounded corners */
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); /* Stronger, softer shadow */
+            padding: 40px; /* Increased padding */
+            width: 100%;
+            max-width: 1300px; /* Slightly wider max-width */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        .chart-title {
+            font-size: 2.25rem; /* Larger title */
+            font-weight: 700;
+            color: #2c3e50; /* Darker, more elegant text color */
+            text-align: center;
+            margin-bottom: 20px;
+            letter-spacing: -0.025em; /* Slightly tighter letter spacing */
+        }
+        .tooltip {
+            position: absolute;
+            background-color: rgba(30, 41, 59, 0.9); /* Darker, slightly transparent background */
+            color: #f8fafc;
+            padding: 10px 15px;
+            border-radius: 8px; /* More rounded tooltip */
+            font-size: 0.95rem;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+            z-index: 1000;
+            white-space: nowrap;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transform: translateY(5px);
+        }
+        .tooltip.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        canvas {
+            width: 100% !important;
+            height: auto !important;
+            min-height: 450px; /* Slightly increased min-height */
+            max-height: 650px; /* Slightly increased max-height */
+        }
+        .summary-section {
+            width: 100%;
+            max-width: 600px;
+            margin-top: 30px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .summary-section h2 {
+            background-color: #f8f8f8;
+            padding: 15px 20px;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #34495e;
+            border-bottom: 1px solid #e0e0e0;
+            text-align: center;
+        }
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .summary-table tr:nth-child(even) {
+            background-color: #fcfcfc;
+        }
+        .summary-table th, .summary-table td {
+            padding: 12px 20px;
+            text-align: left;
+            border-bottom: 1px solid #e9e9e9;
+            font-size: 0.95rem;
+            color: #333;
+        }
+        .summary-table th {
+            font-weight: 500;
+            color: #555;
+            width: 60%; /* Adjust width for description column */
+        }
+        .summary-table td {
+            font-weight: 600;
+            color: #2c3e50;
+            text-align: right;
+            width: 40%; /* Adjust width for value column */
+        }
+        .summary-table tr:last-child td {
+            border-bottom: none;
+        }
+        .summary-table .highlight {
+            font-weight: 700;
+            color: #28a745; /* Green for key totals */
+        }
+        .summary-table .total-row {
+            background-color: #e6f7ff; /* Light blue background for total row */
+        }
+        .summary-table .total-row td {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #0056b3;
+            border-top: 2px solid #a0d9ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="chart-container">
+        <h1 class="chart-title">40th Anniversary Campaign: Budget & Payment</h1>
+        <div class="relative w-full">
+            <canvas id="budgetPaymentChart"></canvas>
+        </div>
+
+        <div class="summary-section">
+            <h2>Overall Campaign Summary</h2>
+            <table class="summary-table">
+                <tbody>
+                    <tr>
+                        <th>Total Paid (as of 28 Aug)</th>
+                        <td class="highlight">109,307,250.20 Baht</td>
+                    </tr>
+                    <tr>
+                        <th>Actual Budget</th>
+                        <td>133,873,950.00 Baht</td>
+                    </tr>
+                    <tr>
+                        <th>Total Budget Planned</th>
+                        <td>140,000,000.00 Baht</td>
+                    </tr>
+                    <tr class="total-row">
+                        <th>Remaining Budget</th>
+                        <td class="highlight">30,692,749.80 Baht</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="chartTooltip" class="tooltip"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const chartData = {
+                labels: [
+                    '01 Strategy',
+                    '02 Media Production',
+                    '03 Media Buy',
+                    '03 Media Buy: Radio',
+                    '04 Public Relations',
+                    '05 Event / Activity &',
+                    '06 Webpage',
+                    '07 Brand Survey',
+                    '08 VDO Summary and others'
+                ],
+                datasets: [
+                    {
+                        label: 'Total Paid (Baht)',
+                        // Updated data based on the latest image: image_e9e935.png
+                        data: [1000000.00, 55700000.00, 49496620.20, 2210630.00, 0.00, 0.00, 0.00, 900000.00, 0.00],
+                        backgroundColor: '#4CAF50', // A vibrant green
+                        borderRadius: 8, // More rounded bars
+                        stack: 'BudgetStack',
+                    },
+                    {
+                        label: 'Remain Unpaid (Baht)', // Changed label here
+                        // Updated remaining budget calculation based on new 'Total Paid' for '03 Media Buy: Radio'
+                        data: [
+                            1000000.00 - 1000000.00,
+                            55700000.00 - 55700000.00,
+                            67400000.00 - 49496620.20,
+                            4000000.00 - 2210630.00, // Corrected '03 Media Buy: Radio' calculation
+                            5000000.00 - 0.00,
+                            3000000.00 - 0.00,
+                            1500000.00 - 0.00,
+                            1800000.00 - 900000.00,
+                            600000.00 - 0.00
+                        ],
+                        backgroundColor: '#90CAF9', // A soft blue
+                        borderRadius: 8,
+                        stack: 'BudgetStack',
+                    }
+                ]
+            };
+
+            const ctx = document.getElementById('budgetPaymentChart').getContext('2d');
+            const chartTooltip = document.getElementById('chartTooltip');
+
+            const budgetPaymentChart = new Chart(ctx, {
+                type: 'bar',
+                data: chartData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: {
+                                    size: 14,
+                                    family: 'Inter',
+                                    weight: '600'
+                                },
+                                usePointStyle: true,
+                                padding: 25,
+                                color: '#34495e'
+                            }
+                        },
+                        title: {
+                            display: false,
+                        },
+                        tooltip: {
+                            enabled: false,
+                            external: function(context) {
+                                let tooltipModel = context.tooltip;
+
+                                if (tooltipModel.opacity === 0) {
+                                    chartTooltip.classList.remove('show');
+                                    return;
+                                }
+
+                                chartTooltip.classList.remove('above', 'below', 'no-transform');
+                                if (tooltipModel.yAlign) {
+                                    chartTooltip.classList.add(tooltipModel.yAlign);
+                                } else {
+                                    chartTooltip.classList.add('no-transform');
+                                }
+
+                                if (tooltipModel.body) {
+                                    let title = tooltipModel.title[0];
+                                    let totalBudget = 0;
+                                    // Sum up all parts of the stack for the given data point to get the total budget
+                                    // It's important to use the original total budget as per the table, not just the sum of paid and remaining from datasets
+                                    // Re-calculate total budget from the initial table values for accuracy in tooltip
+                                    const originalTotalBudgets = [1000000.00, 55700000.00, 67400000.00, 4000000.00, 5000000.00, 3000000.00, 1500000.00, 1800000.00, 600000.00];
+                                    totalBudget = originalTotalBudgets[tooltipModel.dataPoints[0].dataIndex];
+
+                                    let totalPaid = chartData.datasets[0].data[tooltipModel.dataPoints[0].dataIndex];
+                                    let remainUnpaid = chartData.datasets[1].data[tooltipModel.dataPoints[0].dataIndex]; // Changed variable name
+
+                                    let innerHtml = `
+                                        <div class="font-bold mb-1 text-gray-100">${title}</div>
+                                        <div>Total Budget: <span class="text-green-300">${totalBudget.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span> Baht</div>
+                                        <div>Total Paid: <span class="text-blue-300">${totalPaid.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span> Baht</div>
+                                        <div>Remain Unpaid: <span class="text-yellow-300">${remainUnpaid.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span> Baht</div> <!-- Changed label here -->
+                                    `;
+                                    chartTooltip.innerHTML = innerHtml;
+                                }
+
+                                const position = context.chart.canvas.getBoundingClientRect();
+                                chartTooltip.classList.add('show');
+                                chartTooltip.style.left = position.left + window.pageXOffset + tooltipModel.caretX + 'px';
+                                chartTooltip.style.top = position.top + window.pageYOffset + tooltipModel.caretY - chartTooltip.clientHeight - 10 + 'px';
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                font: {
+                                    size: 12,
+                                    family: 'Inter',
+                                    weight: '500'
+                                },
+                                color: '#546E7A', /* Softer grey for ticks */
+                                autoSkip: false,
+                                maxRotation: 45,
+                                minRotation: 45
+                            },
+                            barPercentage: 0.85, /* Slightly wider bars */
+                            categoryPercentage: 0.75 /* Slightly wider categories */
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Baht',
+                                font: {
+                                    size: 15,
+                                    family: 'Inter',
+                                    weight: 'bold'
+                                },
+                                color: '#546E7A'
+                            },
+                            grid: {
+                                color: '#eceff1', /* Lighter grid lines */
+                                borderDash: [2, 2] /* Dashed grid lines */
+                            },
+                            ticks: {
+                                font: {
+                                    size: 12,
+                                    family: 'Inter',
+                                    weight: '500'
+                                },
+                                color: '#546E7A',
+                                callback: function(value) {
+                                    return value.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+                                }
+                            },
+                            stacked: true
+                        }
+                    }
+                }
+            });
+
+            function adjustCanvasSize() {
+                const chartContainer = document.querySelector('.chart-container');
+                const canvas = document.getElementById('budgetPaymentChart');
+
+                const aspectRatio = 0.5;
+                let newHeight = chartContainer.offsetWidth * aspectRatio;
+                const minHeight = 450;
+                const maxHeight = 650;
+
+                newHeight = Math.max(minHeight, Math.min(newHeight, maxHeight));
+
+                canvas.style.height = `${newHeight}px`;
+                budgetPaymentChart.resize();
+            }
+
+            adjustCanvasSize();
+            window.addEventListener('resize', adjustCanvasSize);
+        });
+    </script>
+</body>
+</html>
