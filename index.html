@@ -65,7 +65,7 @@
         }
         .summary-section {
             width: 100%;
-            max-width: 600px;
+            max-width: 700px; /* Increased max-width for the new table */
             margin-top: 30px;
             border: 1px solid #e0e0e0;
             border-radius: 8px;
@@ -98,13 +98,22 @@
         .summary-table th {
             font-weight: 500;
             color: #555;
-            width: 60%; /* Adjust width for description column */
         }
         .summary-table td {
             font-weight: 600;
             color: #2c3e50;
             text-align: right;
-            width: 40%; /* Adjust width for value column */
+        }
+        .summary-table thead th {
+            background-color: #eff6ff; /* Light blue header */
+            color: #2563eb;
+            font-weight: 700;
+            text-align: center;
+            border-bottom: 2px solid #a0d9ff;
+        }
+        .summary-table tbody td:first-child {
+            text-align: left;
+            font-weight: 500;
         }
         .summary-table tr:last-child td {
             border-bottom: none;
@@ -113,14 +122,53 @@
             font-weight: 700;
             color: #28a745; /* Green for key totals */
         }
+        .summary-table .negative {
+            color: #d9534f; /* Red for negative values */
+        }
+        .summary-table .over-budget {
+            color: #d9534f; /* Red for over budget */
+            font-weight: 600;
+        }
+        .summary-table .under-budget {
+            color: #28a745; /* Green for under budget */
+            font-weight: 600;
+        }
+        .summary-table .on-budget {
+            color: #337ab7; /* Blue for on budget */
+            font-weight: 600;
+        }
+        .summary-table .diff-positive {
+            color: #d9534f; /* Red for positive diff (over budget) */
+            font-weight: 600;
+        }
+        .summary-table .diff-negative {
+            color: #28a745; /* Green for negative diff (under budget) */
+            font-weight: 600;
+        }
+        .summary-table .diff-zero {
+            color: #337ab7; /* Blue for zero diff (on budget) */
+            font-weight: 600;
+        }
         .summary-table .total-row {
             background-color: #e6f7ff; /* Light blue background for total row */
         }
-        .summary-table .total-row td {
+        .summary-table .total-row td, .summary-table .total-row th {
             font-size: 1.1rem;
             font-weight: 700;
             color: #0056b3;
             border-top: 2px solid #a0d9ff;
+        }
+        .summary-table .total-actual-row {
+            background-color: #f0f8ff; /* Slightly different background for total actual row */
+        }
+        .summary-table .total-actual-row td, .summary-table .total-actual-row th {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #0056b3;
+            border-top: 1px solid #a0d9ff;
+        }
+        .summary-table tfoot th {
+             text-align: left; /* Align footer headers to left */
         }
     </style>
 </head>
@@ -136,22 +184,104 @@
             <table class="summary-table">
                 <tbody>
                     <tr>
+                        <th>Actual Budget</th>
+                        <td>133,873,950.00 Baht</td>
+                    </tr>
+                    <tr>
                         <th>Total Paid (as of 28 Aug)</th>
                         <td class="highlight">109,307,250.20 Baht</td>
                     </tr>
                     <tr>
-                        <th>Actual Budget</th>
-                        <td>133,873,950.00 Baht</td>
+                        <th>Remaining Unpaid</th>
+                        <td>24,566,699.80 Baht</td>
                     </tr>
                     <tr>
                         <th>Total Budget Planned</th>
                         <td>140,000,000.00 Baht</td>
                     </tr>
                     <tr class="total-row">
-                        <th>Remaining Budget</th>
-                        <td class="highlight">30,692,749.80 Baht</td>
+                        <th>Diff Actual Budget VS Budget Planned</th>
+                        <td class="highlight negative">- 6,126,050.00 Baht</td>
                     </tr>
                 </tbody>
+            </table>
+        </div>
+
+        <div class="summary-section">
+            <h2>Detailed Budget vs Actual Spending</h2>
+            <table class="summary-table">
+                <thead>
+                    <tr>
+                        <th style="width: 40%;">Scope</th>
+                        <th style="width: 30%;">Total Budget</th>
+                        <th style="width: 15%;">Actual</th>
+                        <th style="width: 15%;">Diff</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>01 Strategy</td>
+                        <td>1,000,000.00 Baht</td>
+                        <td class="on-budget">1,000,000.00 Baht</td>
+                        <td class="diff-zero">0.00 Baht</td>
+                    </tr>
+                    <tr>
+                        <td>02 Media Production</td>
+                        <td>55,700,000.00 Baht</td>
+                        <td class="on-budget">55,700,000.00 Baht</td>
+                        <td class="diff-zero">0.00 Baht</td>
+                    </tr>
+                    <tr>
+                        <td>03 Media Buy</td>
+                        <td>67,400,000.00 Baht</td>
+                        <td class="under-budget">65,604,307.00 Baht</td>
+                        <td class="diff-negative">-1,795,693.00 Baht</td>
+                    </tr>
+                    <tr>
+                        <td>03 Media Buy: Radio</td>
+                        <td>4,000,000.00 Baht</td>
+                        <td class="over-budget">4,848,450.00 Baht</td>
+                        <td class="diff-positive">848,450.00 Baht</td>
+                    </tr>
+                    <tr>
+                        <td>04 Public Relations</td>
+                        <td>5,000,000.00 Baht</td>
+                        <td class="under-budget">930,000.00 Baht</td>
+                        <td class="diff-negative">-4,070,000.00 Baht</td>
+                    </tr>
+                    <tr>
+                        <td>05 Event / Activity &</td>
+                        <td>3,000,000.00 Baht</td>
+                        <td class="over-budget">2,896,193.00 Baht</td>
+                        <td class="diff-positive">-103,807.00 Baht</td>
+                    </tr>
+                    <tr>
+                        <td>06 Webpage</td>
+                        <td>1,500,000.00 Baht</td>
+                        <td class="under-budget">450,000.00 Baht</td>
+                        <td class="diff-negative">-1,050,000.00 Baht</td>
+                    </tr>
+                    <tr>
+                        <td>07 Brand Survey</td>
+                        <td>1,800,000.00 Baht</td>
+                        <td class="on-budget">1,800,000.00 Baht</td>
+                        <td class="diff-zero">0.00 Baht</td>
+                    </tr>
+                    <tr>
+                        <td>08 VDO Summary and others</td>
+                        <td>600,000.00 Baht</td>
+                        <td class="over-budget">645,000.00 Baht</td>
+                        <td class="diff-positive">45,000.00 Baht</td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr class="total-row">
+                        <th>Total Budget</th>
+                        <td>140,000,000.00 Baht</td>
+                        <td class="highlight">133,873,950.00 Baht</td>
+                        <td class="highlight negative">-6,126,050.00 Baht</td>
+                    </tr>
+                </tfoot>
             </table>
         </div>
     </div>
@@ -183,7 +313,7 @@
                         stack: 'BudgetStack',
                     },
                     {
-                        label: 'Remain Unpaid (Baht)', // Changed label here
+                        label: 'Remain Unpaid (Baht)',
                         // Updated remaining budget calculation based on new 'Total Paid' for '03 Media Buy: Radio'
                         data: [
                             1000000.00 - 1000000.00,
@@ -256,13 +386,13 @@
                                     totalBudget = originalTotalBudgets[tooltipModel.dataPoints[0].dataIndex];
 
                                     let totalPaid = chartData.datasets[0].data[tooltipModel.dataPoints[0].dataIndex];
-                                    let remainUnpaid = chartData.datasets[1].data[tooltipModel.dataPoints[0].dataIndex]; // Changed variable name
+                                    let remainUnpaid = chartData.datasets[1].data[tooltipModel.dataPoints[0].dataIndex];
 
                                     let innerHtml = `
                                         <div class="font-bold mb-1 text-gray-100">${title}</div>
                                         <div>Total Budget: <span class="text-green-300">${totalBudget.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span> Baht</div>
                                         <div>Total Paid: <span class="text-blue-300">${totalPaid.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span> Baht</div>
-                                        <div>Remain Unpaid: <span class="text-yellow-300">${remainUnpaid.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span> Baht</div> <!-- Changed label here -->
+                                        <div>Remain Unpaid: <span class="text-yellow-300">${remainUnpaid.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span> Baht</div>
                                     `;
                                     chartTooltip.innerHTML = innerHtml;
                                 }
